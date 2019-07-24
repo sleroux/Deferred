@@ -9,7 +9,8 @@
 import Foundation
 
 // TODO: Replace this with a class var
-private var DeferredDefaultQueue = DispatchQueue.global(qos: DispatchQoS.default.qosClass)
+@available(OSX 10.10, *)
+public var DeferredDefaultQueue = DispatchQueue.global(qos: DispatchQoS.default.qosClass)
 
 open class Deferred<T> {
     typealias UponBlock = (DispatchQueue, (T) -> ())
@@ -18,6 +19,7 @@ open class Deferred<T> {
     fileprivate var protected: LockProtected<Protected>
     fileprivate let defaultQueue: DispatchQueue
 
+    @available(OSX 10.10, *)
     public init(value: T? = nil, defaultQueue: DispatchQueue = DeferredDefaultQueue) {
         protected = LockProtected(item: (value, []))
         self.defaultQueue = defaultQueue
@@ -88,6 +90,7 @@ extension Deferred {
 }
 
 extension Deferred {
+     @available(OSX 10.10, *)
     public func bindQueue<U>(_ queue: DispatchQueue, f: @escaping (T) -> Deferred<U>) -> Deferred<U> {
         let d = Deferred<U>()
         self.uponQueue(queue) {
@@ -98,6 +101,7 @@ extension Deferred {
         return d
     }
 
+    @available(OSX 10.10, *)
     public func mapQueue<U>(_ queue: DispatchQueue, f: @escaping (T) -> U) -> Deferred<U> {
         return bindQueue(queue) { t in Deferred<U>(value: f(t)) }
     }
@@ -108,21 +112,25 @@ extension Deferred {
         uponQueue(defaultQueue, block: block)
     }
 
+    @available(OSX 10.10, *)
     public func bind<U>(_ f: @escaping (T) -> Deferred<U>) -> Deferred<U> {
         return bindQueue(defaultQueue, f: f)
     }
 
+    @available(OSX 10.10, *)
     public func map<U>(_ f: @escaping (T) -> U) -> Deferred<U> {
         return mapQueue(defaultQueue, f: f)
     }
 }
 
 extension Deferred {
+    @available(OSX 10.10, *)
     public func both<U>(_ other: Deferred<U>) -> Deferred<(T,U)> {
         return self.bind { t in other.map { u in (t, u) } }
     }
 }
 
+@available(OSX 10.10, *)
 public func all<T>(_ deferreds: [Deferred<T>]) -> Deferred<[T]> {
     if deferreds.count == 0 {
         return Deferred(value: [])
@@ -146,6 +154,7 @@ public func all<T>(_ deferreds: [Deferred<T>]) -> Deferred<[T]> {
     return combined
 }
 
+@available(OSX 10.10, *)
 public func any<T>(_ deferreds: [Deferred<T>]) -> Deferred<Deferred<T>> {
     let combined = Deferred<Deferred<T>>()
     for d in deferreds {
